@@ -1,0 +1,168 @@
+{
+  "theme_archetype": {
+    "primary": "Archetype 5 (Luxury)",
+    "secondary": "Archetype 4 (Swiss & High-Contrast)",
+    "description": "A high-end, editorial-first luxury streetwear aesthetic (Off-White/Dior inspired) applied to a curated marketplace of clever everyday gadgets. The contrast between mundane/quirky products and ultra-premium presentation is the core identity."
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Bodoni Moda, serif",
+      "body": "Outfit, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scales": {
+      "h1": "text-5xl sm:text-6xl lg:text-7xl font-light tracking-tighter",
+      "h2": "text-4xl sm:text-5xl font-light tracking-tight",
+      "h3": "text-2xl sm:text-3xl font-light",
+      "h4": "text-xl font-normal",
+      "body": "text-base leading-relaxed tracking-wide",
+      "overline": "text-xs font-medium uppercase tracking-[0.2em]"
+    },
+    "rules": [
+      "Never center-align headings by default. Embrace aggressive left or right alignment to create tension.",
+      "Use Bodoni Moda for all display headings to create the Dior/editorial feel.",
+      "Use Outfit for all UI elements, buttons, and dense descriptions for Apple-like clarity.",
+      "Overlines and labels must be uppercase Outfit with massive tracking (tracking-[0.2em])."
+    ]
+  },
+  "colors": {
+    "light_mode": {
+      "background": "#F7F7F7",
+      "surface": "#FFFFFF",
+      "text_primary": "#0A0A0A",
+      "text_secondary": "#525252",
+      "border": "#E5E5E5",
+      "accent": "#0A0A0A",
+      "accent_foreground": "#FFFFFF",
+      "muted": "#F3F4F6"
+    },
+    "dark_mode": {
+      "background": "#050505",
+      "surface": "#0F0F0F",
+      "text_primary": "#F7F7F7",
+      "text_secondary": "#A3A3A3",
+      "border": "#262626",
+      "accent": "#F7F7F7",
+      "accent_foreground": "#050505",
+      "muted": "#171717"
+    },
+    "rules": [
+      "Absolute monochrome discipline. Color exists only to guide action. 95% of UI is black, white, and gray.",
+      "No gradients. Flat colors and high contrast."
+    ]
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "Use generous spacing. p-12, p-16, p-24, p-32 to create breathing room.",
+    "grid_strategy": {
+      "mode": "Swiss Brutalist Grid / Tetris Grid",
+      "rules": [
+        "Use 1px borders everywhere to expose the grid (border-collapse look).",
+        "Asymmetry is key. Use col-span-8 and col-span-4 to avoid boring 50/50 splits.",
+        "Images must not fill 100% of their containers—leave padding (e.g., p-8) inside bordered containers."
+      ]
+    },
+    "borders": "1px crisp borders. Zero border-radius (rounded-none). Sharp edges signify high-end luxury streetwear."
+  },
+  "components": {
+    "buttons": {
+      "primary": "Solid background, contrasting text, zero border-radius, uppercase tracked text. Hover: slight scale down or inverse colors.",
+      "secondary": "Transparent background, 1px border, contrasting text. Hover: fill background."
+    },
+    "cards": {
+      "product_card": "No visible card background. Just the image, 1px bottom border for separation, and stark minimal typography below. Image container can have a subtle border.",
+      "hover_effect": "Images should have a subtle scale (scale-105) or reveal a secondary image on hover."
+    },
+    "navigation": {
+      "header": "Sticky glassmorphism (backdrop-blur-xl bg-background/80) with a sharp 1px bottom border. Massive logo on the left, minimal links in the center, cart/menu on the right."
+    },
+    "forms_and_filters": {
+      "style": "Minimalist inputs with border-b only (no full box). Floating labels or stark placeholders."
+    }
+  },
+  "motion_and_interactions": {
+    "page_transitions": "Subtle fade-in and slight Y-axis translation (Framer Motion).",
+    "scroll_reveal": "Images and typography block reveal on scroll.",
+    "micro_interactions": "Magnetic buttons, smooth image parallax on scroll."
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "style": "Thin or Light weight. Very minimal and sharp."
+  },
+  "pages": {
+    "Home": {
+      "Hero": "Full bleed section with a central massive image or editorial collage. Headline: 'MALIN' in massive Bodoni Moda. Slogan: 'SMART EVERYDAY.' CTA: 'Shop Now'.",
+      "Collections": "Tetris grid layout featuring collections (Maison, Tech, Habillement). Sharp borders, overlapping text.",
+      "Best Sellers": "4-column grid of product cards with sharp edges and lots of negative space.",
+      "Brand Story": "Editorial layout. Large quote on one side, small dense text block on the other.",
+      "Footer": "Massive 'MALIN' text (text-[15vw]). Minimal links. Stark contrast."
+    },
+    "Shop": {
+      "Layout": "Sidebar for filters (Price, Category, New). Right side: 3-column product grid.",
+      "Filters": "Accordion style or simple sticky list with stark checkboxes."
+    },
+    "Product": {
+      "Layout": "Left side: Asymmetric masonry image gallery. Right side: Sticky product info, price, description, 'Add to Cart' button (massive, full width).",
+      "Similar": "Bottom section, single row scrollable carousel."
+    },
+    "Cart": {
+      "Layout": "Slide-over drawer or dedicated minimal page. High contrast checkout button."
+    }
+  },
+  "media": {
+    "hero": [
+      {
+        "url": "https://images.pexels.com/photos/11317811/pexels-photo-11317811.jpeg",
+        "description": "Stylish woman in cropped hoodie, urban setting (Hero main image)"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1595303526913-c7037797ebe7",
+        "description": "Black laptop computer on white table (Tech/Gadget hero)"
+      }
+    ],
+    "products": [
+      {
+        "url": "https://images.unsplash.com/photo-1615655406736-b37c4fabf923",
+        "description": "Tech gadgets layout (Tech category)"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1769326541255-c6612ab334a0",
+        "description": "White espresso machine (Kitchen category)"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1778049692415-736a34626d9a",
+        "description": "Sharp kitchen knife with dark handle (Kitchen / Smart gadget)"
+      },
+      {
+        "url": "https://images.pexels.com/photos/5208869/pexels-photo-5208869.jpeg",
+        "description": "VR headset and smartwatch (Smart Home / Tech)"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1468495244123-6c6c332eeece",
+        "description": "iPad, sunglasses, wallet (Everyday carry / Accessories)"
+      },
+      {
+        "url": "https://images.pexels.com/photos/29548609/pexels-photo-29548609.jpeg",
+        "description": "Stylish woman in urban street (Streetwear apparel)"
+      }
+    ],
+    "brand_story": [
+      {
+        "url": "https://images.unsplash.com/photo-1559697242-a465f2578a95",
+        "description": "Two men standing (Streetwear fashion model)"
+      }
+    ]
+  },
+  "testing": {
+    "instructions": "All interactive elements (buttons, links, inputs, toggles, cart icons) MUST have a data-testid attribute in kebab-case."
+  },
+  "instructions_to_main_agent": [
+    "Install and use @phosphor-icons/react for icons.",
+    "Use Framer Motion for fade-ins and scroll reveal effects.",
+    "Implement context API for the cart state.",
+    "Create a toggle for Dark/Light mode, adhering strictly to the monochromatic color palette provided.",
+    "Ensure the fonts (Bodoni Moda and Outfit) are imported via Google Fonts in index.html or global css.",
+    "Stick strictly to Tailwind. Avoid pre-built Shadcn components for the marketing/layout parts; build custom pure HTML+Tailwind for the editorial look.",
+    "No border-radius anywhere (rounded-none). The aesthetic must be sharp, stark, and brutalist luxury.",
+    "Use the provided image URLs as placeholders."
+  ]
+}
