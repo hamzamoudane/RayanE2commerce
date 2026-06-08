@@ -112,9 +112,10 @@ export const Header = () => {
       {/* Mobile drawer */}
       {menuOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-50 bg-background lg:hidden"
           data-testid="mobile-menu"
         >
