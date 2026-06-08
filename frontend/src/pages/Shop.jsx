@@ -2,8 +2,18 @@ import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CaretDown, X } from "@phosphor-icons/react";
-import { CATEGORIES, PRODUCTS } from "../data/products";
 import ProductCard from "../components/ProductCard";
+import { useProducts } from "../hooks/useProducts";
+
+const CATEGORIES = [
+  { id: "smart-home", label: "Maison Intelligente" },
+  { id: "tech-gaming", label: "Tech & Gaming" },
+  { id: "cuisine", label: "Cuisine" },
+  { id: "habillement", label: "Habillement" },
+  { id: "curios", label: "Curiosités" },
+  { id: "numerique", label: "Numérique" },
+  { id: "occasion", label: "Seconde Main" },
+];
 
 const SORTS = [
   { id: "feat", label: "Curation" },
@@ -13,6 +23,7 @@ const SORTS = [
 ];
 
 const Shop = () => {
+  const { products, loading } = useProducts();
   const [params, setParams] = useSearchParams();
   const cat = params.get("cat") || "all";
   const [sort, setSort] = useState("feat");
@@ -26,19 +37,18 @@ const Shop = () => {
   };
 
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter((p) => p.price <= maxPrice);
+    let list = products.filter((p) => p.price <= maxPrice);
     if (cat !== "all") list = list.filter((p) => p.category === cat);
     if (sort === "asc") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "desc") list = [...list].sort((a, b) => b.price - a.price);
     if (sort === "new") list = [...list].sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
     return list;
-  }, [cat, sort, maxPrice]);
+  }, [products, cat, sort, maxPrice]);
 
   const currentCat = CATEGORIES.find((c) => c.id === cat);
 
   return (
     <div data-testid="shop-page" className="bg-background">
-      {/* HEAD */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-[1480px] px-4 sm:px-8 py-12 sm:py-20">
           <p className="overline">Catalogue — Vol.04</p>
@@ -53,21 +63,21 @@ const Shop = () => {
             {currentCat ? currentCat.label : "Tout."}
           </motion.h1>
           <p className="mt-6 max-w-2xl text-muted-foreground">
-            {filtered.length} {filtered.length > 1 ? "pièces" : "pièce"} sélectionnées avec
-            obsession. Toutes nos commandes sont préparées sous 24h depuis Paris.
+            {loading
+              ? "Chargement…"
+              : `${filtered.length} ${filtered.length > 1 ? "pièces" : "pièce"} sélectionnées avec obsession. Toutes nos commandes sont préparées sous 24h depuis Paris.`}
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-[1480px] px-4 sm:px-8 py-10 sm:py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* FILTERS */}
         <aside className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start space-y-10">
           <div>
             <p className="overline mb-4">Catégorie</p>
             <ul className="space-y-2 border-t border-border">
               <FilterRow
                 label="Tout"
-                count={PRODUCTS.length}
+                count={products.length}
                 active={cat === "all"}
                 onClick={() => setCat("all")}
                 testId="filter-cat-all"
@@ -76,7 +86,7 @@ const Shop = () => {
                 <FilterRow
                   key={c.id}
                   label={c.label}
-                  count={PRODUCTS.filter((p) => p.category === c.id).length}
+                  count={products.filter((p) => p.category === c.id).length}
                   active={cat === c.id}
                   onClick={() => setCat(c.id)}
                   testId={`filter-cat-${c.id}`}
@@ -88,9 +98,7 @@ const Shop = () => {
           <div>
             <div className="flex justify-between items-baseline">
               <p className="overline">Prix max</p>
-              <p className="font-mono text-sm" data-testid="filter-price-value">
-                {maxPrice}€
-              </p>
+              <p className="font-mono text-sm" data-testid="filter-price-value">{maxPrice}€</p>
             </div>
             <input
               type="range"
@@ -123,10 +131,9 @@ const Shop = () => {
           )}
         </aside>
 
-        {/* GRID */}
         <div className="lg:col-span-9">
           <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
-            <p className="overline">{filtered.length} produits</p>
+            <p className="overline">{loading ? "…" : filtered.length} produits</p>
             <div className="relative">
               <button
                 onClick={() => setOpenSort((v) => !v)}
@@ -137,10 +144,7 @@ const Shop = () => {
                 <CaretDown size={12} />
               </button>
               {openSort && (
-                <div
-                  className="absolute right-0 mt-1 w-56 border border-border bg-background z-30"
-                  data-testid="sort-menu"
-                >
+                <div className="absolute right-0 mt-1 w-56 border border-border bg-background z-30" data-testid="sort-menu">
                   {SORTS.map((s) => (
                     <button
                       key={s.id}
@@ -161,7 +165,13 @@ const Shop = () => {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-[4/5] bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-32" data-testid="empty-state">
               <p className="font-display text-3xl">Aucun produit trouvé.</p>
               <p className="text-sm text-muted-foreground mt-3">
@@ -191,9 +201,7 @@ const FilterRow = ({ label, count, active, onClick, testId }) => (
       }`}
     >
       <span className="inline-flex items-center gap-2">
-        <span
-          className={`block h-1.5 w-1.5 ${active ? "bg-foreground" : "bg-transparent border border-foreground"}`}
-        />
+        <span className={`block h-1.5 w-1.5 ${active ? "bg-foreground" : "bg-transparent border border-foreground"}`} />
         {label}
       </span>
       <span className="font-mono text-xs text-muted-foreground">{count}</span>

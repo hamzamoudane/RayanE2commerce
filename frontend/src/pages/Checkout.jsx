@@ -3,24 +3,57 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, CheckCircle } from "@phosphor-icons/react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { api, formatApiError } from "../lib/api";
 import { eur } from "../lib/format";
 
 const Checkout = () => {
   const { items, subtotal, clear } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [done, setDone] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   if (items.length === 0 && !done) return <Navigate to="/cart" replace />;
 
   const shipping = subtotal >= 200 ? 0 : 9;
   const total = subtotal + shipping;
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setDone(true);
-    setTimeout(() => {
-      clear();
-    }, 400);
+    if (submitting) return;
+    setSubmitting(true);
+    setError("");
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      email: fd.get("email"),
+      first_name: fd.get("first"),
+      last_name: fd.get("last"),
+      address: fd.get("address"),
+      city: fd.get("city"),
+      zip: fd.get("zip"),
+      country: fd.get("country") || "France",
+      phone: fd.get("phone") || "",
+      items: items.map((it) => ({
+        product_id: it.id,
+        name: it.name,
+        price: it.price,
+        qty: it.qty,
+        image: it.image || "",
+      })),
+    };
+    try {
+      const { data } = await api.post("/orders", payload);
+      setOrderId(data.id);
+      setDone(true);
+      setTimeout(() => clear(), 400);
+    } catch (err) {
+      setError(formatApiError(err, "Erreur paiement"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (done) {
@@ -33,19 +66,34 @@ const Checkout = () => {
           className="max-w-xl text-center border border-border p-10"
         >
           <CheckCircle size={48} weight="light" className="mx-auto" />
-          <p className="overline mt-6">Commande simulée — Vol.04 / 2026</p>
+          <p className="overline mt-6">Commande confirmée</p>
           <h1 className="font-display text-5xl sm:text-6xl mt-3 leading-tight">Merci.</h1>
+          {orderId && (
+            <p className="mt-3 font-mono text-xs text-muted-foreground" data-testid="order-id">
+              Réf. {orderId}
+            </p>
+          )}
           <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
-            Le paiement réel sera activé lors de l’intégration backend Stripe. Vous recevrez
-            un email de confirmation et votre commande sera préparée sous 24h.
+            Votre commande a été enregistrée. Le paiement Stripe sera activé prochainement — pour
+            l’instant, le statut est marqué comme <span className="font-mono">paid</span> en mode démo.
+            Vous la retrouvez dans <Link to="/account" className="underline">votre compte</Link>.
           </p>
-          <button
-            onClick={() => navigate("/")}
-            data-testid="checkout-back-home"
-            className="mt-8 overline bg-foreground text-background px-6 py-4 hover:opacity-90 transition-opacity"
-          >
-            Retour à l’accueil
-          </button>
+          <div className="mt-8 flex gap-3 justify-center">
+            <button
+              onClick={() => navigate("/")}
+              data-testid="checkout-back-home"
+              className="overline border border-foreground px-6 py-4 hover:bg-foreground hover:text-background transition-colors"
+            >
+              Retour à l’accueil
+            </button>
+            <Link
+              to="/account"
+              data-testid="checkout-see-orders"
+              className="overline bg-foreground text-background px-6 py-4 hover:opacity-90 transition-opacity"
+            >
+              Mes commandes
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
@@ -72,7 +120,7 @@ const Checkout = () => {
       >
         <div className="lg:col-span-7 space-y-12">
           <Section title="Coordonnées" n="01">
-            <Field label="Email" name="email" type="email" testId="checkout-email" required />
+            <Field label="Email" name="email" type="email" testId="checkout-email" defaultValue={user?.email || ""} required />
           </Section>
 
           <Section title="Livraison" n="02">
@@ -93,15 +141,19 @@ const Checkout = () => {
               <div>
                 <p className="text-foreground font-medium">Stripe — branchement à venir</p>
                 <p className="mt-1 leading-relaxed">
-                  L’intégration de paiement Stripe sera activée à l’étape backend.
-                  Pour l’instant, ce checkout simule une confirmation.
+                  La commande sera enregistrée dans la base. L’encaissement Stripe réel sera
+                  activé dans une prochaine itération.
                 </p>
               </div>
             </div>
+            {error && (
+              <p data-testid="checkout-error" className="mt-3 text-sm text-destructive border border-destructive/50 p-3">
+                {error}
+              </p>
+            )}
           </Section>
         </div>
 
-        {/* Summary */}
         <aside className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start border border-border p-6 sm:p-8 bg-card">
           <p className="overline mb-6">Récapitulatif</p>
           <ul className="divide-y divide-border max-h-72 overflow-y-auto">
@@ -130,10 +182,11 @@ const Checkout = () => {
 
           <button
             type="submit"
+            disabled={submitting}
             data-testid="checkout-submit"
-            className="mt-6 w-full overline bg-foreground text-background py-4 inline-flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+            className="mt-6 w-full overline bg-foreground text-background py-4 inline-flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
-            <Lock size={14} /> Payer {eur(total)}
+            <Lock size={14} /> {submitting ? "Traitement…" : `Payer ${eur(total)}`}
           </button>
 
           <Link to="/cart" className="mt-4 block text-center overline opacity-70 hover:opacity-100" data-testid="checkout-back-cart">

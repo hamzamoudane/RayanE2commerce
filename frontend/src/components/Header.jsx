@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sun, Moon, ShoppingBag, List, X, MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  Sun,
+  Moon,
+  ShoppingBag,
+  List,
+  X,
+  MagnifyingGlass,
+  User,
+  SignOut,
+  Gear,
+  Receipt,
+} from "@phosphor-icons/react";
 import { useTheme } from "../context/ThemeContext";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const links = [
   { to: "/shop", label: "Shop" },
@@ -17,8 +29,11 @@ const links = [
 export const Header = () => {
   const { theme, toggle } = useTheme();
   const { count, setOpen } = useCart();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenu, setUserMenu] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6);
@@ -26,6 +41,20 @@ export const Header = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (!e.target.closest("[data-user-menu]")) setUserMenu(false);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setUserMenu(false);
+    navigate("/");
+  };
 
   return (
     <header
@@ -79,6 +108,71 @@ export const Header = () => {
           >
             {theme === "dark" ? <Sun size={18} weight="light" /> : <Moon size={18} weight="light" />}
           </button>
+
+          {/* User */}
+          <div className="relative" data-user-menu>
+            {user && user !== false ? (
+              <>
+                <button
+                  data-testid="user-menu-button"
+                  onClick={() => setUserMenu((v) => !v)}
+                  className="grid h-10 w-10 place-items-center hover:bg-secondary"
+                  aria-label="Mon compte"
+                >
+                  <User size={18} weight="light" />
+                </button>
+                {userMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-1 w-60 border border-border bg-background shadow-lg z-50"
+                    data-testid="user-menu-dropdown"
+                  >
+                    <div className="px-4 py-3 border-b border-border">
+                      <p className="font-display text-sm truncate">{user.name || "Compte"}</p>
+                      <p className="font-mono text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="overline mt-1">{user.role}</p>
+                    </div>
+                    <Link
+                      to="/account"
+                      onClick={() => setUserMenu(false)}
+                      data-testid="menu-account"
+                      className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary"
+                    >
+                      <Receipt size={14} /> Mes commandes
+                    </Link>
+                    {user.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setUserMenu(false)}
+                        data-testid="menu-admin"
+                        className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary"
+                      >
+                        <Gear size={14} /> Console admin
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      data-testid="menu-logout"
+                      className="w-full text-left flex items-center gap-2 px-4 py-3 text-sm hover:bg-secondary border-t border-border"
+                    >
+                      <SignOut size={14} /> Déconnexion
+                    </button>
+                  </motion.div>
+                )}
+              </>
+            ) : (
+              <Link
+                to="/login"
+                data-testid="header-login"
+                className="hidden sm:inline-flex overline border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-colors"
+              >
+                Connexion
+              </Link>
+            )}
+          </div>
+
           <button
             data-testid="cart-button"
             onClick={() => setOpen(true)}
@@ -142,6 +236,32 @@ export const Header = () => {
                 {l.label}
               </Link>
             ))}
+            <div className="border-t border-border pt-6 flex flex-col gap-4">
+              {user && user !== false ? (
+                <>
+                  <Link to="/account" onClick={() => setMenuOpen(false)} className="overline" data-testid="mobile-account">
+                    Mes commandes
+                  </Link>
+                  {user.role === "admin" && (
+                    <Link to="/admin" onClick={() => setMenuOpen(false)} className="overline" data-testid="mobile-admin">
+                      Console admin
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="overline text-left" data-testid="mobile-logout">
+                    Déconnexion
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMenuOpen(false)} className="overline" data-testid="mobile-login">
+                    Connexion
+                  </Link>
+                  <Link to="/register" onClick={() => setMenuOpen(false)} className="overline" data-testid="mobile-register">
+                    Créer un compte
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
         </motion.div>
       )}

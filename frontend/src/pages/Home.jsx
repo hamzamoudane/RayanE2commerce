@@ -2,12 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Asterisk } from "@phosphor-icons/react";
-import { PRODUCTS, CATEGORIES } from "../data/products";
 import ProductCard from "../components/ProductCard";
 import Marquee from "../components/Marquee";
-
-const bestSellers = PRODUCTS.filter((p) => p.bestSeller).slice(0, 4);
-const newDrops = PRODUCTS.filter((p) => p.isNew).slice(0, 4);
+import { useProducts } from "../hooks/useProducts";
 
 const fade = {
   hidden: { opacity: 0, y: 24 },
@@ -15,6 +12,10 @@ const fade = {
 };
 
 const Home = () => {
+  const { products } = useProducts();
+  const bestSellers = products.filter((p) => p.bestSeller).slice(0, 4);
+  const newDrops = products.filter((p) => p.isNew).slice(0, 4);
+
   return (
     <div data-testid="home-page" className="bg-background">
       {/* HERO */}

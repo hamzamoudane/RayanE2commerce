@@ -1,0 +1,38 @@
+{
+  "summary": "Iteration 2 — JWT auth, products CRUD admin, orders. Backend: 18/18 pytest pass (auth, products CRUD, orders, brute-force lockout). Frontend: full client + admin journeys verified — admin demo prefill -> login -> /admin, table shows 14 seeded rows, create/edit/delete product all work via slide-over, orders tab works, user menu (admin sees 'Console admin', client doesn't), logout, register, /admin protected (anon redirected to /login, client gets auth-forbidden screen), shop add-to-cart, cart drawer cart-checkout, /checkout protected when anon, checkout submit creates order (status='paid'), confirmation with order id shown, /account lists my orders. Backend brute-force lockout triggers 429 with 'Trop de tentatives' — but the rate-limit key includes request.client.host, which behind k8s ingress rotates between proxy IPs so the per-IP counter is fragmented (needed ~12 attempts instead of 5+1 to trigger). Reported as a code review item; lockout still works overall.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/login", "issue": "Brute-force key uses request.client.host which behind the K8s ingress varies between several upstream proxy IPs (e.g. 10.231.129.124 and 10.231.129.113). The per-IP attempt counter is split between IPs so it takes >5 failed attempts to trigger 429. Recommend honoring X-Forwarded-For (first hop) or keying purely on email when behind a trusted proxy."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional / nice-to-have) Improve brute-force IP detection to use X-Forwarded-For so the 5-attempt threshold actually corresponds to 5 attempts from one real client behind the ingress."
+  ],
+  "critical_code_review_comments": [
+    "server.py line 226: ip = request.client.host — behind a reverse proxy this is the upstream proxy IP, not the real client. Use request.headers.get('x-forwarded-for','').split(',')[0].strip() or trustedhost middleware so brute-force protection actually counts per real client.",
+    "set_auth_cookies always uses secure=True and samesite='none' — fine for production HTTPS but will silently fail on http://localhost dev unless backend is served via HTTPS. Frontend already falls back to localStorage Bearer, so it's transparent here, but worth documenting.",
+    "Password policy: 6-char min is OK for demo but consider stronger requirements (length+complexity) before production.",
+    "No rate-limit on /api/auth/register, /api/orders — possible abuse vector."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/__init__.py"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "100% (all listed flows verified)"},
+  "test_credentials": "admin@malin.shop/Admin123!, client1@malin.shop/Client123!, client2@malin.shop/Client123! (seeded idempotently from backend/.env on startup; /app/memory/test_credentials.md present)",
+  "seed_data_creation": "Used the auto-seeded users + 14 products from server.py on_startup. Test created and cleaned up ephemeral products via admin API; orders were created for client1 (3 in TestOrders + 1 from UI checkout — still visible in /account). No cleanup needed for /api/login_attempts (15-min window).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "pytest file is /app/backend/tests/backend_test.py — covers auth (login, register, me, logout, bad-password), products (list/get/404/CRUD as admin, 403 as client), orders (create with shipping 9 / free, isolation between clients, admin sees all, 403 for client on /admin/orders), and brute-force lockout. For UI: forms use data-testid e.g. checkout-first / checkout-last (not checkout-first-name). Admin form uses admin-form-name-input, admin-form-category (select), admin-form-price, admin-form-description, admin-form-submit. The auth-forbidden screen also displays the label 'Accès réservé.'. Frontend uses domcontentloaded — networkidle may hang due to long-lived assets. cart-checkout is inside the drawer triggered by add-to-cart-{id}.",
+  "rca of the issue": "Brute-force counter fragmentation: db.login_attempts identifier is f'{ip}:{email}'. Ingress proxies use multiple internal IPs (observed 10.231.129.113/.124), so the same email gets multiple rows each below the LOCKOUT_THRESHOLD=5. Mitigation: parse X-Forwarded-For (first IP) when set, or key solely on lowercased email. To clear post-test lockouts: db.login_attempts.deleteMany({identifier: /:brute-/})."
+}

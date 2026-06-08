@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus, Minus, ShieldCheck, Truck, ArrowsClockwise } from "@phosphor-icons/react";
-import { findProduct, similarProducts } from "../data/products";
+import { useProduct, useProducts } from "../hooks/useProducts";
 import { useCart } from "../context/CartContext";
 import { eur } from "../lib/format";
 import ProductCard from "../components/ProductCard";
@@ -10,14 +10,23 @@ import { toast, Toaster } from "sonner";
 
 const Product = () => {
   const { id } = useParams();
-  const product = findProduct(id);
+  const { product, loading, error } = useProduct(id);
+  const { products } = useProducts();
   const { add } = useCart();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
-  if (!product) return <Navigate to="/shop" replace />;
+  if (error === "not-found") return <Navigate to="/shop" replace />;
 
-  const similar = similarProducts(product);
+  if (loading || !product) {
+    return (
+      <div className="min-h-[70vh] grid place-items-center" data-testid="product-loading">
+        <p className="overline animate-pulse">Chargement…</p>
+      </div>
+    );
+  }
+
+  const similar = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
 
   const handleAdd = () => {
     add(product, qty);
@@ -28,7 +37,6 @@ const Product = () => {
     <div data-testid="product-page" className="bg-background">
       <Toaster position="top-center" />
 
-      {/* breadcrumb */}
       <div className="border-b border-border">
         <div className="mx-auto max-w-[1480px] px-4 sm:px-8 py-4 flex items-center gap-3 text-xs">
           <Link to="/shop" className="overline inline-flex items-center gap-2 hover:opacity-60" data-testid="back-to-shop">
@@ -41,7 +49,6 @@ const Product = () => {
 
       <section className="border-b border-border">
         <div className="mx-auto max-w-[1480px] px-4 sm:px-8 py-10 sm:py-16 grid grid-cols-1 lg:grid-cols-12 gap-10">
-          {/* Gallery — asymmetric */}
           <div className="lg:col-span-7 grid grid-cols-12 gap-3">
             <motion.div
               key={`hero-${activeImg}`}
@@ -51,7 +58,7 @@ const Product = () => {
               className="col-span-12 aspect-[4/5] bg-muted relative overflow-hidden border border-border"
             >
               <img
-                src={product.images[activeImg]}
+                src={product.images[activeImg] || product.images[0]}
                 alt={product.name}
                 className="absolute inset-0 h-full w-full object-cover"
                 data-testid="product-image-hero"
@@ -73,7 +80,6 @@ const Product = () => {
             </div>
           </div>
 
-          {/* Info — sticky */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 lg:self-start">
             <p className="overline">Réf. {product.id.toUpperCase()}</p>
             <h1
@@ -98,13 +104,15 @@ const Product = () => {
               {product.description}
             </p>
 
-            <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-border pt-4">
-              {product.specs.map((s, i) => (
-                <li key={i} className="font-mono text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-foreground">·</span>{s}
-                </li>
-              ))}
-            </ul>
+            {product.specs.length > 0 && (
+              <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-border pt-4">
+                {product.specs.map((s, i) => (
+                  <li key={i} className="font-mono text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-foreground">·</span>{s}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             <div className="mt-8 flex items-stretch gap-3">
               <div className="inline-flex items-center border border-border">
@@ -153,7 +161,6 @@ const Product = () => {
         </div>
       </section>
 
-      {/* Similar */}
       {similar.length > 0 && (
         <section className="border-b border-border" data-testid="similar-section">
           <div className="mx-auto max-w-[1480px] px-4 sm:px-8 py-16 sm:py-24">
